@@ -24,33 +24,6 @@ display_help() {
     exit 0
 }
 
-# Get the current user's home directory
-home_dir=$(eval echo ~$USER)
-
-# Check if ParamSpider is already cloned and installed
-if [ ! -d "$home_dir/ParamSpider" ]; then
-    echo "Cloning ParamSpider..."
-    git clone https://github.com/0xKayala/ParamSpider "$home_dir/ParamSpider"
-fi
-
-# Check if fuzzing-templates is already cloned.
-if [ ! -d "$home_dir/fuzzing-templates" ]; then
-    echo "Cloning fuzzing-templates..."
-    git clone https://github.com/0xKayala/fuzzing-templates.git "$home_dir/fuzzing-templates"
-fi
-
-# Check if nuclei is installed, if not, install it
-if ! command -v nuclei &> /dev/null; then
-    echo "Installing Nuclei..."
-    go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
-fi
-
-# Check if httpx is installed, if not, install it
-if ! command -v httpx &> /dev/null; then
-    echo "Installing httpx..."
-    go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-fi
-
 # Parse command line arguments
 while [[ $# -gt 0 ]]
 do
@@ -88,12 +61,12 @@ output_file="output/allurls.txt"
 # Step 3: Get the vulnerable parameters based on user input
 if [ -n "$domain" ]; then
     echo "Running ParamSpider on $domain"
-    python3 "$home_dir/ParamSpider/paramspider.py" -d "$domain" --exclude png,jpg,gif,jpeg,swf,woff,gif,svg --level high --quiet -o "output/$domain.txt"
+    paramspider -d "$domain" --exclude png,jpg,gif,jpeg,swf,woff,gif,svg --level high --quiet -o "output/$domain.txt"
     cat "output/$domain.txt" >> "$output_file"  # Append to the combined output file
 elif [ -n "$filename" ]; then
     echo "Running ParamSpider on URLs from $filename"
     while IFS= read -r line; do
-        python3 "$home_dir/ParamSpider/paramspider.py" -d "$line" --exclude png,jpg,gif,jpeg,swf,woff,gif,svg --level high --quiet -o "output/$line.txt"
+        paramspider -d "$line" --exclude png,jpg,gif,jpeg,swf,woff,gif,svg --level high --quiet -o "output/$line.txt"
         cat "output/$line.txt" >> "$output_file"  # Append to the combined output file
     done < "$filename"
 fi
